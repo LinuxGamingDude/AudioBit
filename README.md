@@ -16,5 +16,8 @@ wish to save any custom daemon settings.
 [3] /etc/asound.conf will be overwritten, please backup to a safe location if you wish to save.
 
 [4] Systems should be using systemd and have pulseaudio implemented
+
 [5] May have undefined behavior if run outside of intended environment
+
 [6] Run at your own risk
+
