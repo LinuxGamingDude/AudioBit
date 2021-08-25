@@ -38,9 +38,9 @@ class DaemonInterface:
 	daemonSize = "float32le"
 	CPU_Type = 1
 	resampleMethodOptions = ['soxr-vhq', 'src-sinc-best-quality', 'speex-float-10', 'speex-fixed-10', 'speex-float-5', 'src-sinc-medium-quality', 'src-sinc-fastest', 'src-zero-order-hold', 'src-linear', 'trivial', 'ffmpeg']
-	sampleRateOptions = ['44100', '48000', '96000', '192000']
-	sampleSizeOptionsL = ['s16le', 's24le', 's24-32le', 's32le', 'float32le']
-	sampleSizeOptionsB = ['s16be', 's24be', 's24-32be', 's32be', 'float32be']
+	sampleRateOptions = ['192000', '96000', '48000', '44100',]
+	sampleSizeOptionsL = ['float32le', 's32le', 's24-32le', 's24le', 's24le', 's16le']
+	sampleSizeOptionsB = ['float32be', 's32be', 's24-32be', 's24be', 's24be', 's16be']
 	resampleMethodMenu = []
 	sampleSizeMenu = []
 	sampleRateMenu = []
@@ -202,4 +202,3 @@ def main():
 	master.mainloop()
 
 main()
-
