@@ -4,6 +4,7 @@ A Graphical Interface for adjusting important Linux Audio Settings
 Important Information - Please Review
 
 Author: LinuxGamerDude
+
 Idea Collaboration: SMGuy
 
 [1] This Class is intended as a set of tools to map & set Daemon.Conf options.
