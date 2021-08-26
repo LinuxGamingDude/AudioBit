@@ -18,6 +18,10 @@ wish to save any custom daemon settings.
 
 [4] Systems should be using systemd and have pulseaudio implemented
 
+[5] Use the following command if you would like a way to test Audio Latency:
+pacmd list-sinks | grep 'latency: [1-9]'
+
+
 [5] May have undefined behavior if run outside of intended environment
 
 [6] Run at your own risk
