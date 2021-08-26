@@ -22,7 +22,7 @@ wish to save any custom daemon settings.
 pacmd list-sinks | grep 'latency: [1-9]'
 
 
-[5] May have undefined behavior if run outside of intended environment
+[6] May have undefined behavior if run outside of intended environment
 
-[6] Run at your own risk
+[7] Run at your own risk
 
