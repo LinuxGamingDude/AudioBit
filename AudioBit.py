@@ -111,6 +111,8 @@ class DaemonInterface:
 		os.system('echo \"default-sample-format = ' + self.daemonSize + '\" >> ~/.config/pulse/daemon.conf')
 		os.system('echo \"default-sample-rate = ' + self.daemonRate + '\" >> ~/.config/pulse/daemon.conf')
 		os.system('echo \"alternate-sample-rate = 48000\" >> ~/.config/pulse/daemon.conf')
+		os.system('echo \"default-fragments = 2\" >> ~/.config/pulse/daemon.conf')
+		os.system('echo \"default-fragment-size-msec = 5\" >> ~/.config/pulse/daemon.conf')
 		os.system('echo \"resample-method = ' + self.daemonResampleMethod + '\" >> ~/.config/pulse/daemon.conf')
 		os.system('echo \"high-priority = yes\" >> ~/.config/pulse/daemon.conf')
 		os.system('echo \"nice-level = -11\" >> ~/.config/pulse/daemon.conf')
