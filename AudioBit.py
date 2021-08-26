@@ -1,8 +1,12 @@
 #!/usr/bin/python
 
 import os
+import os.path
 import subprocess
 from tkinter import *
+from tkinter import messagebox
+from datetime import datetime
+from pathlib import Path
 
 class Dat:
 	def __init__(self):
@@ -33,6 +37,8 @@ class DaemonInterface:
 
 	"""
 	daemonExperimental = False
+	daemonExperimentalAlert = False
+	daemonExperimentalIsRoot = False
 	daemonResampleMethod = "speex-float-10"
 	daemonRate = "48000"
 	daemonSize = "float32le"
@@ -52,6 +58,7 @@ class DaemonInterface:
 		CPU_Type = int(subprocess.check_output(cmd, shell=True))
 
 		#Generate System Specific GUI Options
+
 		for x in self.resampleMethodOptions:
 			self.resampleMethodMenu.append(StringVar(root, x, x))
 
@@ -65,15 +72,42 @@ class DaemonInterface:
 			for x in self.sampleSizeOptionsL:
 				self.sampleSizeMenu.append(StringVar(root, x, x))
 
+		self.isProgramRunningAsRoot()
+
 	def resetPulse(self):
-		os.system('systemctl --user restart pulseaudio')
+		if not self.daemonExperimentalIsRoot:
+			os.system('systemctl --user restart pulseaudio')
+		else:
+			os.system('killall pulseaudio')
 
 	def writeConfig(self):
 		#(1) remove old pulse config 
 		os.system('rm -r ~/.config/pulse/')
 		os.system('mkdir ~/.config/pulse')
 
-		#(2) write new daemon.conf with desired settings
+
+		#(2) write asound.conf with direct pulseaudio <-> kernel communication
+		readcmd = "cat /etc/asound.conf"
+		alreadySet = False
+		
+		asound = Path("/etc/asound.conf")
+		if asound.is_file():
+			readcmdOutput = str(subprocess.check_output(readcmd, shell=True))
+		else:
+			alreadySet = False
+			readcmdOutput = "File does not exist"
+
+		if "pcm.!default {" in readcmdOutput:
+			alreadySet = True
+
+		if self.daemonExperimental and self.daemonExperimentalIsRoot and not alreadySet:
+			os.system('echo "# Use PulseAudio plugin hw" >> /etc/asound.conf')
+			os.system('echo "pcm.!default {" >> /etc/asound.conf')
+			os.system('echo "   type plug" >> /etc/asound.conf')
+			os.system('echo "   slave.pcm hw" >> /etc/asound.conf')
+			os.system('echo "}" >> /etc/asound.conf')
+
+		#(3) write new daemon.conf with desired settings
 		os.system('echo \"default-sample-format = ' + self.daemonSize + '\" >> ~/.config/pulse/daemon.conf')
 		os.system('echo \"default-sample-rate = ' + self.daemonRate + '\" >> ~/.config/pulse/daemon.conf')
 		os.system('echo \"alternate-sample-rate = 48000\" >> ~/.config/pulse/daemon.conf')
@@ -85,16 +119,15 @@ class DaemonInterface:
 		os.system('echo \"rlimit-rtprio = 9\" >> ~/.config/pulse/daemon.conf')
 		os.system('echo \"daemonize = no\" >> ~/.config/pulse/daemon.conf')
 
-		#(3) write asound.conf with direct pulseaudio <-> kernel communication
-		if self.daemonExperimental:
-			os.system('sudo echo "pcm.!default {" >> /etc/asound.conf')
-			os.system('sudo echo "   type plug" >> /etc/asound.conf')
-			os.system('sudo echo "   slave.pcm hw" >> /etc/asound.conf')
-			os.system('sudo echo "}" >> /etc/asound.conf')
-
 		#(4) reset pulse audio 
 		'''You may have to refresh your webpage if audio-stream interrupted'''
 		self.resetPulse()
+
+	def isProgramRunningAsRoot(self):
+		cmd = "id"
+		cmdOutput = str(subprocess.check_output(cmd, shell=True))
+		if "uid=0" in cmdOutput:
+			self.daemonExperimentalIsRoot = True
 
 	def getResampleOptions(self):
 		return self.resampleMethodMenu
@@ -123,6 +156,15 @@ class DaemonInterface:
 	def setSize(self, choice):
 		self.daemonSize = choice.get()
 
+	def setExperimental(self):
+		self.daemonExperimental = not self.daemonExperimental
+		if not self.daemonExperimentalAlert:
+			self.daemonExperimentalAlert = not self.daemonExperimentalAlert
+			if not self.daemonExperimentalIsRoot:
+				messagebox.showinfo("Alert", "You must run AudioBit with Root access in order to apply experimental settings \n \n This will require you to relaunch the Program as Root before proceeding \n \n By enabling this feature slave.pcm hw plugin allows direct communication to the kernal audio driver")
+			else:
+				messagebox.showinfo("Information", "By enabling this feature slave.pcm hw plugin allows direct communication to the kernal audio driver")
+
 def main():
 	#Create master widget & center it on-screen
 	master = Tk()
@@ -145,7 +187,7 @@ def main():
 
 	#Structuring the GUI presentation
 
-	'''Setting up initial OptionMenu Vars'''
+	'''Setting up initial OptionMenu & Checkbutton Vars'''
 	resampleMethodVar = StringVar()
 	resampleMethodVar.set("None Selected") 
 	
@@ -155,6 +197,7 @@ def main():
 	sampleSizeVar = StringVar()
 	sampleSizeVar.set("None Selected")
 
+	reduceVar = IntVar()
 
 	'''Resample Method Options'''
 	resampleMethodFrame = Frame(master)
@@ -186,9 +229,13 @@ def main():
 	sampleSizeLabel.pack(side=LEFT, padx=20)
 	sampleSizeMenu.pack(side=RIGHT, padx=20)
 
+	'''Reduce audio latency (experimental)'''
+	reduceLatencyFrame = Frame(master)
+	reduceLatencyCheckbutton = Checkbutton(reduceLatencyFrame, text="Reduce Latency (experimental)", variable=reduceVar, onvalue=1, offvalue=0, command=dInterface.setExperimental, selectcolor="black")
 
-	'''TODO Experimental direct Pulseaudio/Kernel communication'''
-
+	#pack the components
+	reduceLatencyFrame.pack(side=TOP, pady=10, fill=X)
+	reduceLatencyCheckbutton.pack(side=LEFT, padx=10)
 
 	'''Application Buttons'''
 	applicationButtonsFrame = Frame(master)
@@ -202,3 +249,4 @@ def main():
 	master.mainloop()
 
 main()
+
